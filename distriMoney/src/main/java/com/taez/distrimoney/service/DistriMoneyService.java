@@ -61,25 +61,25 @@ public class DistriMoneyService {
 		long currentTime = DateUtil.createCurrentTime();
 
 		if ((info.getCreateDate() + (10 * 60 * 1000)) < currentTime) {
-			log.error("{}|{}|The request has expired.", userId, info.getCreateDate());
+			log.error("userId : {}| createDate : {}|The request has expired.", userId, info.getCreateDate());
 			return ERROR_NUM;
 
 		}
 		if (userId.equals(info.getCreateUserID())) {
-			log.error("{}|{}| It cannot be distributed with the created ID.", userId, info.getCreateDate());
+			log.error("userId : {}| createId: {}| It cannot be distributed with the created ID.", userId, info.getCreateUserID());
 			return ERROR_NUM;
 		}
 		// 전체다 가져갔는지 중요
 		if (info.getDistriTargetUserCnt() == info.getGetUserCnt()) {
-			log.error("{}|{}| All the money has been distributed", userId, info.getCreateDate());
+			log.error("userId : {}| All the money has been distributed", userId);
 			return ERROR_NUM;
 		}
 		if (!info.getTargetRoomID().equals(roomId)) {
-			log.error("{}|{}|{} this room numver is wrong", userId, roomId, info.getCreateDate());
+			log.error("userId : {}|roomId: {}| this room numver is wrong", userId, roomId);
 			return ERROR_NUM;
 		}
 		if (info.getTargetUserInfos().containsKey(userId)) {
-			log.error("{}|{}| This user Id is wrong", userId, info.getCreateDate());
+			log.error("userId : {}| This user Id is wrong", userId);
 			return ERROR_NUM;
 		}
 		int distriMoney = info.takeMoney();
