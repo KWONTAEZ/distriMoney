@@ -1,2 +1,3 @@
 # distriMoney
-distriMoney
+사용자가 카카오톡 방에서 제공하는 돈뿌리기 기능을 사용할때 
+필요한 API 개발 
