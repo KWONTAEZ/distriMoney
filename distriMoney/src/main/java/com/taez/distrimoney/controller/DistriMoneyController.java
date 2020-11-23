@@ -30,9 +30,6 @@ public class DistriMoneyController {
 	@Autowired
 	DistriMoneyService distriMoneyService;
 
-	@Autowired
-	DistriMoneyRepo distriMoneyrepo;
-
 	// token 생성
 	@PostMapping("/create")
 	public ResponseEntity<Response> distriMoney(@RequestHeader(value = "X-USER-ID") String userId,
@@ -55,32 +52,8 @@ public class DistriMoneyController {
 			@RequestHeader(value = "X-ROOM-ID") String roomId, @RequestParam(value = "token") String token) {
 		String errMsg = null;
 		String code = "SUCCESS";
-		if (!distriMoneyrepo.containsKey(token)) {
-			code = "ERROR";
-			errMsg = "token is invalid.";
-			return ResponseEntity.badRequest().body(new Response(code, errMsg, null));
-		}
-		DistriMoneyInfo info = (DistriMoneyInfo) distriMoneyrepo.getObject(token);
-		// 가져간 계정인지 중요하다
-		long currentTime = DateUtil.createCurrentTime();
-		if ((info.getCreateDate() + (10 * 60 * 1000)) < currentTime) {
-			code = "ERROR";
-			errMsg = "The request has expired.";
-			return ResponseEntity.badRequest().body(new Response(code, errMsg, null));
-		}
-		if (userId.equals(info.getCreateUserID())) {
-			code = "ERROR";
-			errMsg = "It cannot be distributed with the created ID.";
-			return ResponseEntity.badRequest().body(new Response(code, errMsg, null));
-		}
-		// 전체다 가져갔는지 중요
-		if (info.getDistriTargetUserCnt() == info.getGetUserCnt()) {
-			code = "ERROR";
-			errMsg = "All the money has been distributed.";
-			return ResponseEntity.badRequest().body(new Response(code, errMsg, null));
-		}
-		int distriMoney = distriMoneyService.takenMoney((DistriMoneyInfo) distriMoneyrepo.getObject(token), userId,
-				roomId);
+		int distriMoney = distriMoneyService.takenMoney( userId,
+				roomId, token);
 		Map<String, Object> resultMap = new HashMap<>();
 
 		if (distriMoney < 0) {
@@ -98,14 +71,14 @@ public class DistriMoneyController {
 			@RequestHeader(value = "X-ROOM-ID") String roomId, @RequestParam(value = "token") String token) {
 		String errMsg = null;
 		String code = "SUCCESS";
-		if (!distriMoneyrepo.containsKey(token)) {
-			code = "ERROR";
-			errMsg = "token error";
-			return ResponseEntity.badRequest().body(new Response(code, errMsg, null));
-		} 
-		
-		DistriMoneyInfo info = (DistriMoneyInfo) distriMoneyrepo.getObject(token);
+		DistriMoneyInfo info = (DistriMoneyInfo) distriMoneyService.describeInfo(token);
 
+		if (info == null) {
+			code = "ERROR";
+			errMsg = "takenMoney service error";
+			return ResponseEntity.badRequest().body(new Response(code, errMsg, null));
+		}
+		
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("info", info);
 

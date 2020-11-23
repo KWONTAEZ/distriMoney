@@ -5,11 +5,14 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.taez.distrimoney.model.DistriMoneyInfo;
 import com.taez.distrimoney.model.DistriMoneyRequest;
+import com.taez.distrimoney.model.Response;
 import com.taez.distrimoney.repository.DistriMoneyRepo;
+import com.taez.distrimoney.util.DateUtil;
 import com.taez.distrimoney.util.TokenUtil;
 
 import lombok.extern.slf4j.Slf4j;
@@ -17,10 +20,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class DistriMoneyService {
-	
+
+	private static final int ERROR_NUM = -1;
+
 	@Autowired
 	DistriMoneyRepo distriMoneyrepo;
-	
+
 	public String createDistriMoneyInfo(DistriMoneyRequest request) {
 		String token = null;
 		DistriMoneyInfo info = new DistriMoneyInfo(request.getCreateUserID(), request.getTargetRoomID(),
@@ -28,21 +33,54 @@ public class DistriMoneyService {
 		List<Integer> distriMoney = createDistriMoneys(request.getOriMoney(), request.getTargetUserCnt());
 		info.setDistriMoney(distriMoney);
 		token = TokenUtil.createToken();
-		
+
 		distriMoneyrepo.insertObject(token, info);
 
 		return token;
 	}
 
-	public int takenMoney(DistriMoneyInfo info, String userId, String roomId) {
-		if (info.getCreateUserID().equals(userId)) {
-			return -1;
+	public DistriMoneyInfo describeInfo(String token) {
+		if (!distriMoneyrepo.containsKey(token)) {
+			log.error("{}|{}| The token is wrong", token);
+			return null;
 		}
-		if(!info.getTargetRoomID().equals(roomId)) {
-			return -1;
+
+		return (DistriMoneyInfo) distriMoneyrepo.getObject(token);
+	}
+
+	public int takenMoney(String userId, String roomId, String token) {
+		if (!distriMoneyrepo.containsKey(token)) {
+			log.error("{}|{}| The token is wrong", userId, token);
+			return ERROR_NUM;
+		}
+		return takenMoney((DistriMoneyInfo) distriMoneyrepo.getObject(token), userId, roomId);
+	}
+
+	public int takenMoney(DistriMoneyInfo info, String userId, String roomId) {
+
+		long currentTime = DateUtil.createCurrentTime();
+
+		if ((info.getCreateDate() + (10 * 60 * 1000)) < currentTime) {
+			log.error("{}|{}|The request has expired.", userId, info.getCreateDate());
+			return ERROR_NUM;
+
+		}
+		if (userId.equals(info.getCreateUserID())) {
+			log.error("{}|{}| It cannot be distributed with the created ID.", userId, info.getCreateDate());
+			return ERROR_NUM;
+		}
+		// 전체다 가져갔는지 중요
+		if (info.getDistriTargetUserCnt() == info.getGetUserCnt()) {
+			log.error("{}|{}| All the money has been distributed", userId, info.getCreateDate());
+			return ERROR_NUM;
+		}
+		if (!info.getTargetRoomID().equals(roomId)) {
+			log.error("{}|{}|{} this room numver is wrong", userId, roomId, info.getCreateDate());
+			return ERROR_NUM;
 		}
 		if (info.getTargetUserInfos().containsKey(userId)) {
-			return -1;
+			log.error("{}|{}| This user Id is wrong", userId, info.getCreateDate());
+			return ERROR_NUM;
 		}
 		int distriMoney = info.takeMoney();
 		info.getTargetUserInfos().put(userId, distriMoney);
