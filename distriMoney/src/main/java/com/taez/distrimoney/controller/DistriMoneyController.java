@@ -43,9 +43,7 @@ public class DistriMoneyController {
 		request.setTargetRoomID(roomId);
 		request.setOriMoney(oriMoney);
 		request.setTargetUserCnt(userCnt);
-		DistriMoneyInfo info = distriMoneyService.createDistriMoneyInfo(request);
-		String token = TokenUtil.createToken();
-		distriMoneyrepo.insertObject(token, info);
+		String token = distriMoneyService.createDistriMoneyInfo(request);
 
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("token", token);

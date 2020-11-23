@@ -4,10 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.taez.distrimoney.model.DistriMoneyInfo;
 import com.taez.distrimoney.model.DistriMoneyRequest;
+import com.taez.distrimoney.repository.DistriMoneyRepo;
+import com.taez.distrimoney.util.TokenUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,12 +18,20 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class DistriMoneyService {
 	
-	public DistriMoneyInfo createDistriMoneyInfo(DistriMoneyRequest request) {
+	@Autowired
+	DistriMoneyRepo distriMoneyrepo;
+	
+	public String createDistriMoneyInfo(DistriMoneyRequest request) {
+		String token = null;
 		DistriMoneyInfo info = new DistriMoneyInfo(request.getCreateUserID(), request.getTargetRoomID(),
 				request.getOriMoney(), request.getTargetUserCnt(), 10);
 		List<Integer> distriMoney = createDistriMoneys(request.getOriMoney(), request.getTargetUserCnt());
 		info.setDistriMoney(distriMoney);
-		return info;
+		token = TokenUtil.createToken();
+		
+		distriMoneyrepo.insertObject(token, info);
+
+		return token;
 	}
 
 	public int takenMoney(DistriMoneyInfo info, String userId, String roomId) {

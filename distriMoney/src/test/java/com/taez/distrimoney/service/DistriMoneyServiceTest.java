@@ -42,8 +42,9 @@ public class DistriMoneyServiceTest {
 		request.setOriMoney(oriMoney);
 		request.setTargetUserCnt(userCnt);
 		
-		DistriMoneyInfo info = distriMoneyservice.createDistriMoneyInfo(request);
-		assertThat((info.getDistriMoney().size())).isEqualTo(userCnt);
+		String token = distriMoneyservice.createDistriMoneyInfo(request);
+		assertThat(token).isNotBlank();
+		assertThat(token.length()).isEqualTo(3);
 	}
 	
 	@Test
@@ -60,10 +61,8 @@ public class DistriMoneyServiceTest {
 		request.setOriMoney(oriMoney);
 		request.setTargetUserCnt(userCnt);
 		
-		DistriMoneyInfo info = distriMoneyservice.createDistriMoneyInfo(request);
-		String token = TokenUtil.createToken();
-		repository.insertObject(token, info);
-		
+		String token = distriMoneyservice.createDistriMoneyInfo(request);
+		DistriMoneyInfo info = (DistriMoneyInfo) repository.getObject(token);
 		int money = distriMoneyservice.takenMoney(info, userId, roomId);
 		
 		assertThat(money).isGreaterThan(0);
@@ -83,8 +82,8 @@ public class DistriMoneyServiceTest {
 		request.setOriMoney(oriMoney);
 		request.setTargetUserCnt(userCnt);
 		
-		DistriMoneyInfo info = distriMoneyservice.createDistriMoneyInfo(request);
-		String token = TokenUtil.createToken();
+		String token = distriMoneyservice.createDistriMoneyInfo(request);
+		DistriMoneyInfo info = (DistriMoneyInfo) repository.getObject(token);
 		repository.insertObject(token, info);
 		
 		int money = distriMoneyservice.takenMoney(info, createId, roomId);
@@ -105,8 +104,8 @@ public class DistriMoneyServiceTest {
 		request.setOriMoney(oriMoney);
 		request.setTargetUserCnt(userCnt);
 		
-		DistriMoneyInfo info = distriMoneyservice.createDistriMoneyInfo(request);
-		String token = TokenUtil.createToken();
+		String token = distriMoneyservice.createDistriMoneyInfo(request);
+		DistriMoneyInfo info = (DistriMoneyInfo) repository.getObject(token);
 		repository.insertObject(token, info);
 		
 		int money = distriMoneyservice.takenMoney(info, userId, roomId);
