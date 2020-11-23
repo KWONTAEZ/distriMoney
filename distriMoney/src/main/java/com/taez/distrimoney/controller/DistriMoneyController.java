@@ -98,14 +98,13 @@ public class DistriMoneyController {
 			@RequestHeader(value = "X-ROOM-ID") String roomId, @RequestParam(value = "token") String token) {
 		String errMsg = null;
 		String code = "SUCCESS";
-		DistriMoneyInfo info = null;
 		if (!distriMoneyrepo.containsKey(token)) {
 			code = "ERROR";
 			errMsg = "token error";
 			return ResponseEntity.badRequest().body(new Response(code, errMsg, null));
-		} else {
-			info = (DistriMoneyInfo) distriMoneyrepo.getObject(token);
-		}
+		} 
+		
+		DistriMoneyInfo info = (DistriMoneyInfo) distriMoneyrepo.getObject(token);
 
 		Map<String, Object> resultMap = new HashMap<>();
 		resultMap.put("info", info);
